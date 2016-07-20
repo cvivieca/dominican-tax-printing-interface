@@ -1,10 +1,7 @@
 package com.taxprinter.models
 
 import com.taxprinter.models.enums.DocumentType
-import com.taxprinter.models.enums.MemoryStatus
-import com.taxprinter.models.enums.Mode
 import com.taxprinter.models.enums.SubState
-import io.dropwizard.validation.OneOf
 import org.hibernate.validator.constraints.NotEmpty
 
 /**
@@ -21,8 +18,8 @@ import org.hibernate.validator.constraints.NotEmpty
  */
 class FiscalStatus(
         @NotEmpty val document: DocumentType,
-        @NotEmpty val memory: MemoryStatus,
-        @NotEmpty val mode: Mode,
+        @NotEmpty val memory: String,
+        @NotEmpty val mode: String,
         @NotEmpty val substate: SubState,
         @NotEmpty val techmode: Boolean,
         @NotEmpty val open: Boolean

@@ -2,7 +2,6 @@ package com.taxprinter.configs
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Configuration
-import org.hibernate.validator.constraints.NotEmpty
 
 /**
  * Created by george on 03/07/16.
@@ -22,4 +21,10 @@ class TaxprinterConfig() : Configuration() {
      */
     @JsonProperty
     var jmsURI: String? = null
+
+    /**
+     * Port descriptor for the printer
+     */
+    @JsonProperty
+    var portDescriptor: String? = null
 }

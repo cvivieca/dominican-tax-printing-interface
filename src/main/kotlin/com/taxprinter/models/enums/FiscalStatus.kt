@@ -1,6 +1,7 @@
 package com.taxprinter.models.enums
 
 import com.fasterxml.jackson.annotation.JsonValue
+import java.util.*
 
 /**
  * Created by george on 03/07/16.
@@ -17,18 +18,21 @@ enum class DocumentType(@get:JsonValue val s: String) {
     REPORT("report");
 }
 
-enum class MemoryStatus(@get:JsonValue val s: String) {
-    GOOD("good"),
-    DEPLETED("depleted"),
-    FULL("full"),
-    BROKEN("broken")
+fun getMemoryStatus(k: Byte): String {
+    val table = Hashtable<Byte, String>()
+    table.put(0b01000000, "good")
+    table.put(0b01010000, "depleted")
+    table.put(0b01001000, "full")
+    // AND with a Mask
+    return table[(k.toInt() and 0b01011000).toByte()]?: "unknown"
 }
 
-enum class Mode(@get:JsonValue val s: String) {
-    BLOCKED("blocked"),
-    MANUFACTURE("manufacture"),
-    TRAINING("training"),
-    FISCAL("fiscal")
+fun getMode(k: Byte): String {
+    val table = Hashtable<Byte, String>()
+    table.put(0b01100000, "fiscal")
+    table.put(0b01000000, "training")
+    // AND with a Mask
+    return table[(k.toInt() and 0b01100000).toByte()]?: "unknown"
 }
 
 enum class SubState(@get:JsonValue val s: String) {
