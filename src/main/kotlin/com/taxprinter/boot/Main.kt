@@ -3,8 +3,7 @@ package com.taxprinter.boot
 import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
-import com.taxprinter.resources.StateResource
-import com.taxprinter.resources.VersionResource
+import com.taxprinter.resources.*
 import io.dropwizard.Application
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
@@ -28,6 +27,10 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         // than kotlin class references
         environment?.jersey()?.register(VersionResource::class.java)
         environment?.jersey()?.register(StateResource::class.java)
+        environment?.jersey()?.register(PrinterInformationResource::class.java)
+        environment?.jersey()?.register(FeedPaperResource::class.java)
+        environment?.jersey()?.register(ZCloseResource::class.java)
+        environment?.jersey()?.register(XReportResource::class.java)
     }
 
     override fun getName(): String {

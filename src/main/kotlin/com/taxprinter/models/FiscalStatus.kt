@@ -1,7 +1,5 @@
 package com.taxprinter.models
 
-import com.taxprinter.models.enums.DocumentType
-import com.taxprinter.models.enums.SubState
 import org.hibernate.validator.constraints.NotEmpty
 
 /**
@@ -17,10 +15,10 @@ import org.hibernate.validator.constraints.NotEmpty
  * @param substate: Misc substates
  */
 class FiscalStatus(
-        @NotEmpty val document: DocumentType,
+        @NotEmpty val document: String,
         @NotEmpty val memory: String,
         @NotEmpty val mode: String,
-        @NotEmpty val substate: SubState,
+        @NotEmpty val substate: String,
         @NotEmpty val techmode: Boolean,
         @NotEmpty val open: Boolean
 )

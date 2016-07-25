@@ -3,6 +3,8 @@ package com.taxprinter.driver.bixolonsrp350.utils
 import com.fazecast.jSerialComm.SerialPort
 import com.google.inject.Inject
 import com.google.inject.name.Named
+import com.sun.org.apache.xpath.internal.operations.Bool
+import org.apache.commons.io.IOUtils
 import org.apache.log4j.Logger
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
@@ -22,10 +24,35 @@ class SerialClient
         return true
     }
 
-    fun getStatus(): ByteArray {
-        // TODO: make this work
+    fun closeZReport(withPrint: Boolean) {
+        if (withPrint) {
+            queryCmd(byteArrayOf(0x49, 0x30, 0x5A, 0x30))
+            return
+        }
+        queryCmd(byteArrayOf(0x49, 0x30, 0x5A, 0x31))
+    }
+
+    fun closeXReport() {
+        queryCmd(byteArrayOf(0x49, 0x30, 0x58))
+    }
+
+    fun feedPaper() {
+        // TODO: Make this work!
+        // comPort.writeBytes(byteArrayOf(0x07, 0x01), 2)
+    }
+
+    fun getStatusS1(): ByteArray {
         getState() // Send ENQ to enable error reporting
         queryCmd(byteArrayOf(0x53, 0x31))
+        val input = comPort.inputStream
+        // Read until 150 bytes, this fucking stream interface never ends
+        val bytes = IOUtils.toByteArray(input, 150)
+        return bytes
+    }
+
+    fun getStatusS2(): ByteArray {
+        getState() // Send ENQ to enable error reporting
+        queryCmd(byteArrayOf(0x53, 0x32))
         val buffer = ByteArray(1024)
         comPort.readBytes(buffer, buffer.size.toLong())
         return buffer
@@ -61,6 +88,7 @@ class SerialClient
         comPort.baudRate = 9600
         comPort.numDataBits = 8
         comPort.numStopBits = 1
+        comPort.parity = SerialPort.EVEN_PARITY
         comPort.setFlowControl(SerialPort.FLOW_CONTROL_CTS_ENABLED)
         comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 100, 0)
         if (!comPort.isOpen) {

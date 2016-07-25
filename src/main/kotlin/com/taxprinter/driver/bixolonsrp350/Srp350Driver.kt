@@ -3,10 +3,7 @@ package com.taxprinter.driver.bixolonsrp350
 import com.google.inject.Inject
 import com.taxprinter.driver.TaxPrinterDriver
 import com.taxprinter.driver.bixolonsrp350.utils.SerialClient
-import com.taxprinter.models.FiscalStatus
-import com.taxprinter.models.PrinterStatus
-import com.taxprinter.models.State
-import com.taxprinter.models.Version
+import com.taxprinter.models.*
 import com.taxprinter.models.enums.*
 import org.apache.log4j.Logger
 
@@ -17,26 +14,55 @@ import org.apache.log4j.Logger
 class Srp350Driver
 @Inject
 constructor(val client: SerialClient) : TaxPrinterDriver {
+    override fun zClose(withPrint: Boolean): ZClose {
+        client.openPort()
+        client.closeZReport(withPrint)
+        client.closePort()
+        return ZClose(12)
+    }
+
     companion object {
         val logger = Logger.getLogger(Srp350Driver::class.java)
     }
 
     override fun printXReport() {
+        client.openPort()
+        client.closeXReport()
+        client.closePort()
+
+    }
+
+    override fun feedPaper() {
+        client.openPort()
+        client.feedPaper()
+        client.closePort()
+    }
+
+    override fun getPrinterInfo(): PrinterInfo {
+        client.openPort()
+        val statusS1ByteArray = client.getStatusS1()
+        val printerSerialBytes = statusS1ByteArray.slice(130..135)
+            .toByteArray()
+        client.closePort()
+        val printerSerial = String(printerSerialBytes, charset("ASCII"))
+        return PrinterInfo(printerSerial, printerSerial)
 
     }
 
     override fun getState(): State {
+        // TODO: Finish this!
         client.openPort()
         val stateByteArray = client.getState().slice(1..2)
                 .toByteArray()
-        val statusByteArray = client.getStatus()
+        val statusByteArray = client.getStatusS2()
+        val documentTypeBytes = statusByteArray[75]
         client.closePort()
         return State(
                 FiscalStatus(
-                        DocumentType.NONE,
+                        getDocumentType(documentTypeBytes),
                         getMemoryStatus(stateByteArray.getOrNull(1)?: 0),
                         getMode(stateByteArray.getOrNull(1)?: 0),
-                        SubState.FISCALAUDITORY,
+                        getSubstate(stateByteArray.getOrNull(1)?: 0),
                         false,
                         false),
                 PrinterStatus(
