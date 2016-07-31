@@ -5,10 +5,7 @@ package com.taxprinter.driver
  * used by the application.
  * Created by george on 04/07/16.
  */
-import com.taxprinter.models.PrinterInfo
-import com.taxprinter.models.State
-import com.taxprinter.models.Version
-import com.taxprinter.models.ZClose
+import com.taxprinter.models.*
 
 interface TaxPrinterDriver {
     fun getPrinterInfo(): PrinterInfo
@@ -17,4 +14,5 @@ interface TaxPrinterDriver {
     fun printXReport() // Prints X Report
     fun feedPaper() // Feed paper
     fun zClose(withPrint: Boolean): ZClose // Z Close
+    fun printInvoice(invoice: Invoice): Boolean // Print an invoice
 }

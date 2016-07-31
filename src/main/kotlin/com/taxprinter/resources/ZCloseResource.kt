@@ -27,29 +27,13 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): Paren
     @GET
     @Path("/")
     fun close(@Suspended asyncResponse: AsyncResponse) {
-        resourceExecutor.submit {
-            if (lock.isLocked) {
-                val result = Response(
-                        "Hardware busy.",
-                        null
-                        ,
-                        "error")
-                asyncResponse.resume(result)
-                return@submit
-            }
-            lock.lock()
-            try {
-                val result = Response(
-                        "",
-                        driver.zClose(withPrint = false)
-                        ,
-                        "success")
-                asyncResponse.resume(result)
-            } finally {
-                lock.unlock()
-            }
-
-        }
+        runWithHwLock {
+            Response(
+                "",
+                driver.zClose(withPrint = false)
+                ,
+                "success")
+        }(asyncResponse)
     }
     /**
      * Do a fiscal end by doing a Z close with a print
@@ -58,28 +42,12 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): Paren
     @GET
     @Path("/print")
     fun closeWithPrint(@Suspended asyncResponse: AsyncResponse) {
-        resourceExecutor.submit {
-            if (lock.isLocked) {
-                val result = Response(
-                        "Hardware busy.",
-                        null
-                        ,
-                        "error")
-                asyncResponse.resume(result)
-                return@submit
-            }
-            lock.lock()
-            try {
-                val result = Response(
-                        "",
-                        driver.zClose(withPrint = true)
-                        ,
-                        "success")
-                asyncResponse.resume(result)
-            } finally {
-                lock.unlock()
-            }
-
-        }
+        runWithHwLock {
+            Response(
+                "",
+                driver.zClose(withPrint = true)
+                ,
+                "success")
+        }(asyncResponse)
     }
 }

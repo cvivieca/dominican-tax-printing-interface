@@ -29,28 +29,12 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): Paren
      */
     @GET
     fun state(@Suspended asyncResponse: AsyncResponse) {
-        resourceExecutor.submit {
-            if (lock.isLocked) {
-                val result = Response(
-                        "Hardware busy.",
-                        null
-                        ,
-                        "error")
-                asyncResponse.resume(result)
-                return@submit
-            }
-            lock.lock()
-            try {
-                val result = Response(
-                        "",
-                        driver.getState()
-                        ,
-                        "success")
-                asyncResponse.resume(result)
-            } finally {
-                lock.unlock()
-            }
-
-        }
+        runWithHwLock {
+            Response(
+                    "",
+                    driver.getState()
+                    ,
+                    "success")
+        }(asyncResponse)
     }
 }

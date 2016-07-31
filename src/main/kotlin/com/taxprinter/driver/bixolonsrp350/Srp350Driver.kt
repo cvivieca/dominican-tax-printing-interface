@@ -2,7 +2,7 @@ package com.taxprinter.driver.bixolonsrp350
 
 import com.google.inject.Inject
 import com.taxprinter.driver.TaxPrinterDriver
-import com.taxprinter.driver.bixolonsrp350.utils.SerialClient
+import com.taxprinter.driver.bixolonsrp350.utils.Client
 import com.taxprinter.models.*
 import com.taxprinter.models.enums.*
 import org.apache.log4j.Logger
@@ -13,7 +13,15 @@ import org.apache.log4j.Logger
  */
 class Srp350Driver
 @Inject
-constructor(val client: SerialClient) : TaxPrinterDriver {
+constructor(val client: Client) : TaxPrinterDriver {
+
+    override fun printInvoice(invoice: Invoice): Boolean {
+        client.openPort()
+        val print = client.printInvoice(invoice)
+        client.closePort()
+        return print
+    }
+
     override fun zClose(withPrint: Boolean): ZClose {
         client.openPort()
         client.closeZReport(withPrint)
@@ -41,7 +49,7 @@ constructor(val client: SerialClient) : TaxPrinterDriver {
     override fun getPrinterInfo(): PrinterInfo {
         client.openPort()
         val statusS1ByteArray = client.getStatusS1()
-        val printerSerialBytes = statusS1ByteArray.slice(130..135)
+        val printerSerialBytes = statusS1ByteArray.slice(131..136)
             .toByteArray()
         client.closePort()
         val printerSerial = String(printerSerialBytes, charset("ASCII"))
@@ -75,7 +83,7 @@ constructor(val client: SerialClient) : TaxPrinterDriver {
     }
 
     override fun getVersion(): Version {
-        return Version(client.version, "Enterprise Tax Printer Server " +
+        return Version(client.getVersion(), "Enterprise Tax Printer Server " +
                 "- SRP-350 driver")
     }
 }

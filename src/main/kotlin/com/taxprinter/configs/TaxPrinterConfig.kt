@@ -27,4 +27,10 @@ class TaxprinterConfig() : Configuration() {
      */
     @JsonProperty
     var portDescriptor: String? = null
+
+    /**
+     * Driver implementation to load
+     */
+    @JsonProperty
+    var driver: String? = null
 }

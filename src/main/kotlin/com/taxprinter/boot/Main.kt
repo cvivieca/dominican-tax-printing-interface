@@ -1,21 +1,30 @@
 package com.taxprinter.boot
 
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
 import com.taxprinter.resources.*
 import io.dropwizard.Application
+import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
-
+import org.eclipse.jetty.servlets.CrossOriginFilter
+import java.util.*
+import javax.servlet.DispatcherType
+import kotlin.system.exitProcess
 
 
 /**
  * Created by george on 03/07/16.
  */
 fun main(args: Array<String>) {
-    val args = arrayOf("server", "taxprinter.yml")
-    TaxPrinterApplication().run(*args)
+    if (!License.check()) {
+        println("Beta trial expired, ask your provider for a new software build.")
+        exitProcess(1)
+    }
+    val extra = arrayOf("server", "taxprinter.yml")
+    TaxPrinterApplication().run(*args+extra)
 }
 
 class TaxPrinterApplication() : Application<TaxprinterConfig>() {
@@ -31,6 +40,16 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         environment?.jersey()?.register(FeedPaperResource::class.java)
         environment?.jersey()?.register(ZCloseResource::class.java)
         environment?.jersey()?.register(XReportResource::class.java)
+        environment?.jersey()?.register(InvoiceResource::class.java)
+        environment?.jersey()?.register(JsonProcessingExceptionMapper(true)) // TODO: Exception on response DISABLE on production
+
+        val filter = environment?.servlets()?.addFilter("CORSFilter", CrossOriginFilter::class.java)
+
+        filter?.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, environment?.applicationContext?.contextPath + "*")
+        filter?.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,OPTIONS")
+        filter?.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*")
+        filter?.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Origin, Content-Type, Accept")
+        filter?.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true")
     }
 
     override fun getName(): String {
@@ -45,6 +64,8 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         .build()
 
         bootstrap?.addBundle(guiceBundle)
+
+        bootstrap?.objectMapper?.registerModule(Jdk8Module()) // Support new Optional Jdk8 data type on Jackson POJOs
     }
 
 }

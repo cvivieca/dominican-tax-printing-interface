@@ -1,1 +1,2 @@
 portDescriptor: /dev/ttyUSB0
+driver: bixolonsrp350
