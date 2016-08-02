@@ -2,6 +2,7 @@ package com.taxprinter.models
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import javax.validation.constraints.DecimalMin
 
 /**
  *

@@ -14,9 +14,8 @@ class License {
             val c = Calendar.getInstance()
             c.time = sdf.parse(dt)
             c.add(Calendar.DATE, 30)  // number of days to add
-            dt = sdf.format(c.time)  // dt is now the new date
-            val nowd = sdf.format(Calendar.getInstance().time)
-            return nowd != dt
+            val nowd = Calendar.getInstance()
+            return nowd.time <= c.time
         }
     }
 }

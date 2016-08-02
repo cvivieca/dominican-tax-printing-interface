@@ -28,7 +28,9 @@ constructor   (
         @JsonProperty("payments") @NotEmpty @Valid @UnwrapValidatedValue var payments: Array<Payment>,
         @JsonProperty("discounts") @Valid @UnwrapValidatedValue var discounts: Optional<Array<Discount>>,
         @JsonProperty("charges") @Valid @UnwrapValidatedValue var charges: Optional<Array<Charge>>,
-        @JsonProperty("comments") @NotEmpty @UnwrapValidatedValue var comments: Optional<Array<String>>
+        @JsonProperty("comments") @NotEmpty @UnwrapValidatedValue var comments: Optional<Array<String>>,
+        @JsonProperty("host") var host: Optional<String>,
+        @JsonProperty("invoice_id") var invoiceId: Int
 
 ) {
     @ValidationMethod(message = "El campo type debe contener valores validos")

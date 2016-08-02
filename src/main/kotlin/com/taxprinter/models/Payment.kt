@@ -3,6 +3,8 @@ package com.taxprinter.models
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.validation.ValidationMethod
+import org.hibernate.validator.constraints.NotEmpty
+import javax.validation.constraints.DecimalMin
 import java.util.*
 
 /**

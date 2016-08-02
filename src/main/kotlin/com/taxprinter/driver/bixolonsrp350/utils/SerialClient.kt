@@ -155,7 +155,13 @@ class SerialClient
         val closedb = byteArrayOf(0x31, 0x39, 0x39)
         val closedbFrame = prepareFrame(closedb)
         comPort.writeBytes(closedbFrame, closedbFrame.size.toLong())
-        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 1)}")
+        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+        if (invoice.copy.orElse(false)) {
+            Thread.sleep(2000)
+            val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
+            comPort.writeBytes(copyFrame, copyFrame.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+        }
         return true
 
     }
