@@ -31,7 +31,7 @@ object RequestQueueService {
 
     fun <T> queueRequest(body: () -> Response<T>): (AsyncResponse) -> Unit {
         return { asyncResponse: AsyncResponse ->
-                if (queue.size > 13) {
+                if (queue.size > 50) {
                     val result = Response(
                             "Request queue full.",
                             null
