@@ -15,13 +15,15 @@ import javax.ws.rs.container.AsyncResponse
 object RequestQueueService {
 
     private val resourceExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private val queue = ConcurrentLinkedQueue<() -> Unit>()
+    private val queue = ConcurrentLinkedQueue<Lazy<Boolean>>()
 
     fun startRunner() {
         resourceExecutor.submit {
             while (true) {
-                queue.poll()?.invoke()
-                Thread.sleep(200)
+                val element = queue.poll()
+                if (element == null)
+                    Thread.sleep(200)
+                element?.value // Evaluate lazy value now
             }
         }
     }
@@ -29,7 +31,6 @@ object RequestQueueService {
 
     fun <T> queueRequest(body: () -> Response<T>): (AsyncResponse) -> Unit {
         return { asyncResponse: AsyncResponse ->
-                val result = body()
                 if (queue.size > 13) {
                     val result = Response(
                             "Request queue full.",
@@ -38,7 +39,10 @@ object RequestQueueService {
                             "error")
                     asyncResponse.resume(result)
                 } else {
-                    queue.add { asyncResponse.resume(result) }
+                    queue.add(lazy {
+                        val result = body()
+                        asyncResponse.resume(result)
+                    })
                 }
         }
     }
