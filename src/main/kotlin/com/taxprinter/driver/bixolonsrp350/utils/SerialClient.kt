@@ -64,10 +64,10 @@ class SerialClient
             val rncFrame = prepareFrame(byteArrayOf(0x69, 0x52, 0x30) + rncb)
             val clientFrame = prepareFrame(byteArrayOf(0x69, 0x53, 0x30) + clientb)
             comPort.writeBytes(rncFrame, rncFrame.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 1)}")
 
             comPort.writeBytes(clientFrame, clientFrame.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         }
 
         if (invoice.ncf.isPresent) {
@@ -75,7 +75,7 @@ class SerialClient
             val ncfb = byteArrayOf(0x46) + invoice.ncf.orElse("").padStart(19, '0').toByteArray(charset("ASCII"))
             val ncfFrame = prepareFrame(ncfb)
             comPort.writeBytes(ncfFrame, ncfFrame.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         }
 
         if (invoice.referenceNcf.isPresent) {
@@ -83,14 +83,14 @@ class SerialClient
             val rncf = byteArrayOf(0x69, 0x46, 0x30) + invoice.referenceNcf.orElse("").padStart(19, '0').toByteArray(charset("ASCII"))
             val rncFrame = prepareFrame(rncf)
             comPort.writeBytes(rncFrame, rncFrame.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         }
 
         // Write document type
         val dt = byteArrayOf(0x2f, documentType[invoice.type]?: 0x30)
         val dtFrame = prepareFrame(dt)
         comPort.writeBytes(dtFrame, dtFrame.size.toLong())
-        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
 
         val taxb = Hashtable<Int, Byte>()
         taxb.put(0, 0x20)
@@ -108,12 +108,12 @@ class SerialClient
             val descb = description.toByteArray(charset("ASCII"))
             val itemframe = prepareFrame(taxba + priceb + qtyb + descb)
             comPort.writeBytes(itemframe, itemframe.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
             if (discount.isPresent && discount.orElse(0.00) > 0.00) {
                 val itd = byteArrayOf(0x70, 0x2d) + (discount.orElse(0.00) * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
                 val itdFrame = prepareFrame(itd)
                 comPort.writeBytes(itdFrame, itdFrame.size.toLong())
-                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
             }
         }
 
@@ -121,7 +121,7 @@ class SerialClient
         for ((amount) in invoice.discounts.orElse(emptyArray())) {
             val perc = byteArrayOf(0x70, 0x2a) + (amount * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
             comPort.writeBytes(perc, perc.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         }
 
         val pmt = Hashtable<String, ByteArray>()
@@ -140,7 +140,7 @@ class SerialClient
                 val payl = byteArrayOf(0x31) + (pmt[payment.type]?: byteArrayOf(0x31))
                 val paylFrame = prepareFrame(payl)
                 comPort.writeBytes(paylFrame, paylFrame.size.toLong())
-                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
             } else {
                 val payb = pmt[payment.type] ?: byteArrayOf(0x31)
                 val amountb = (payment.amount * 100).toInt().toString().padStart(12, '0').toByteArray(charset("ASCII"))
@@ -148,7 +148,7 @@ class SerialClient
                 val pmntpayload = byteArrayOf(0x32) + payb + amountb + commentb
                 val pmntPayloadFrame = prepareFrame(pmntpayload)
                 comPort.writeBytes(pmntPayloadFrame, pmntPayloadFrame.size.toLong())
-                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
             }
         }
 
@@ -157,12 +157,12 @@ class SerialClient
         val closedb = byteArrayOf(0x31, 0x39, 0x39)
         val closedbFrame = prepareFrame(closedb)
         comPort.writeBytes(closedbFrame, closedbFrame.size.toLong())
-        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         if (invoice.copy.orElse(false)) {
             Thread.sleep(2000) // TODO: Read printer status on a loop
             val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
             comPort.writeBytes(copyFrame, copyFrame.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 2)}")
         }
         return true
 
