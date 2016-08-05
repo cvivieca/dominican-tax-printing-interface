@@ -19,7 +19,7 @@ constructor(
         @JsonProperty("quantity") @field:Min(0) var quantity: Double,
         @JsonProperty("price") @field:Min(0) var price: Double,
         @JsonProperty("itbis") @field:Min(0) var itbis: Int,
-        @JsonProperty("discount") @field:Max(100) var discount: Double,
+        @JsonProperty("discount") @field:Max(100) var discount: Optional<Double>,
         @JsonProperty("charges") @field:Min(100) var charges: Double
         ) {
     @ValidationMethod(message = "El campo itbis solo acepta uno de los siguientes valores: 18, 13, 11, 8, 5, 0")

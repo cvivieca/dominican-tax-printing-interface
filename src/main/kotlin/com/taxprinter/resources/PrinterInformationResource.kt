@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.taxprinter.driver.TaxPrinterDriver
 import com.taxprinter.models.Response
+import com.taxprinter.services.RequestQueueService
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -19,14 +20,14 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class PrinterInformationResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): ParentResource(){
+constructor(@Named("printerDriver") private val driver: TaxPrinterDriver) {
     /**
      * Returns printer hardware info
      * @return Printer Hardware Info
      */
     @GET
     fun state(@Suspended asyncResponse: AsyncResponse) {
-        runWithHwLock {
+        RequestQueueService.queueRequest {
             Response(
                     "",
                     driver.getPrinterInfo()

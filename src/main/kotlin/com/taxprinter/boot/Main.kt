@@ -5,6 +5,7 @@ import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
 import com.taxprinter.resources.*
+import com.taxprinter.services.RequestQueueService
 import io.dropwizard.Application
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper
 import io.dropwizard.setup.Bootstrap
@@ -50,6 +51,9 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         filter?.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*")
         filter?.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Origin, Content-Type, Accept")
         filter?.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true")
+
+        // Initialize queue runner
+        RequestQueueService.startRunner()
     }
 
     override fun getName(): String {

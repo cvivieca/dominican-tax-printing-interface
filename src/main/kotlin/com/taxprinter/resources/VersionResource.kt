@@ -3,6 +3,7 @@ package com.taxprinter.resources
 import com.google.inject.Inject
 import com.taxprinter.driver.TaxPrinterDriver
 import com.taxprinter.models.Response
+import com.taxprinter.services.RequestQueueService
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -25,13 +26,13 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class VersionResource
 @Inject
-constructor(private val driver: TaxPrinterDriver): ParentResource() {
+constructor(private val driver: TaxPrinterDriver){
     /**
      * Gets the API software compatible version (ver 7.0-pre at this time).
      */
     @GET
     fun version(@Suspended asyncResponse: AsyncResponse) {
-        runWithHwLock {
+        RequestQueueService.queueRequest {
             Response(
                     "",
                     driver.getVersion(),

@@ -5,6 +5,7 @@ import com.google.inject.name.Named
 import com.taxprinter.driver.TaxPrinterDriver
 import com.taxprinter.models.Invoice
 import com.taxprinter.models.Response
+import com.taxprinter.services.RequestQueueService
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
@@ -27,7 +28,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class InvoiceResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): ParentResource(){
+constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
     /**
      * Receives an Invoice object over POST; prints an invoice once validated.
      *
@@ -37,7 +38,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver): Paren
     @Consumes(MediaType.APPLICATION_JSON)
     fun printInvoice(@Valid invoice: Invoice,
                      @Suspended asyncResponse: AsyncResponse) {
-        runWithHwLock {
+        RequestQueueService.queueRequest {
             Response(
                     "Invoice printed successfully",
                     driver.printInvoice(invoice),
