@@ -15,4 +15,5 @@ interface TaxPrinterDriver {
     fun feedPaper() // Feed paper
     fun zClose(withPrint: Boolean): ZClose // Z Close
     fun printInvoice(invoice: Invoice): Boolean // Print an invoice
+    fun printLastInvoice(): Boolean // print the last printed invoice
 }

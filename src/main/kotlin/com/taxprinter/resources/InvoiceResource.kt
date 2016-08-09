@@ -7,10 +7,7 @@ import com.taxprinter.models.Invoice
 import com.taxprinter.models.Response
 import com.taxprinter.services.RequestQueueService
 import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import javax.ws.rs.*
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.MediaType
@@ -44,5 +41,21 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
                     driver.printInvoice(invoice),
                     "success")
         }(asyncResponse)
+    }
+
+    /**
+     * Prints the last printed Invoice (uses printer capabilities)
+     */
+    @GET
+    @Path("/last")
+    fun printLast(@Suspended asyncResponse: AsyncResponse) {
+        RequestQueueService.queueRequest {
+            Response(
+                    "Last invoice printed again",
+                    driver.printLastInvoice(),
+                    "success"
+            )
+        }(asyncResponse)
+
     }
 }

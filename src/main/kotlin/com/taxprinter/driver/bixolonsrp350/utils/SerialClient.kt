@@ -159,7 +159,7 @@ class SerialClient
         comPort.writeBytes(closedbFrame, closedbFrame.size.toLong())
         logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
         if (invoice.copy.orElse(false)) {
-            Thread.sleep(2000) // TODO: Read printer status on a loop
+            Thread.sleep(4000) // TODO: Read printer status on a loop
             val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
             comPort.writeBytes(copyFrame, copyFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
@@ -167,6 +167,14 @@ class SerialClient
         return true
 
     }
+
+    override fun printLastInvoice(): Boolean {
+        val reprintFrame = prepareFrame(byteArrayOf(0x52, 0x55))
+        comPort.writeBytes(reprintFrame, reprintFrame.size.toLong())
+        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+        return true
+    }
+
 
     override fun closeZReport(withPrint: Boolean) {
         if (withPrint) {

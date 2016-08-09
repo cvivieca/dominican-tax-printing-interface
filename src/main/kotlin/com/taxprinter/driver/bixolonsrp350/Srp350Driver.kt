@@ -15,6 +15,13 @@ class Srp350Driver
 @Inject
 constructor(val client: Client) : TaxPrinterDriver {
 
+    override fun printLastInvoice(): Boolean {
+        client.openPort()
+        val print = client.printLastInvoice()
+        client.closePort()
+        return print
+    }
+
     override fun printInvoice(invoice: Invoice): Boolean {
         client.openPort()
         val print = client.printInvoice(invoice)

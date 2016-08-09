@@ -11,6 +11,7 @@ interface Client {
     fun feedPaper()
     fun getVersion(): String
     fun printInvoice(invoice: Invoice): Boolean
+    fun printLastInvoice(): Boolean
     fun closeZReport(withPrint: Boolean)
     fun closeXReport()
     fun getStatusS1(): ByteArray
