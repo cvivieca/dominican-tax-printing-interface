@@ -94,11 +94,11 @@ class SerialClient
 
         val taxb = Hashtable<Int, Byte>()
         taxb.put(0, 0x20)
-        taxb.put(5, 0x21)
-        taxb.put(8, 0x22)
-        taxb.put(11, 0x23)
-        taxb.put(13, 0x24)
-        taxb.put(18, 0x25)
+        taxb.put(16, 0x21)
+        taxb.put(18, 0x22)
+        taxb.put(8, 0x23)
+        taxb.put(11, 0x24)
+        taxb.put(13, 0x25)
 
         // Register items
         for ((description, extraDescription, quantity, price, itbis, discount) in invoice.items) {
