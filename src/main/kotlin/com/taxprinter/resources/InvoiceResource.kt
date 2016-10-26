@@ -6,6 +6,8 @@ import com.taxprinter.driver.TaxPrinterDriver
 import com.taxprinter.models.Invoice
 import com.taxprinter.models.Response
 import com.taxprinter.services.RequestQueueService
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import javax.validation.Valid
 import javax.ws.rs.*
 import javax.ws.rs.container.AsyncResponse
@@ -22,6 +24,7 @@ import javax.ws.rs.core.MediaType
  * creates a new InvoiceResource JAX-RS resource
  */
 @Path("/invoice")
+@Api(value = "/invoice", description = "Receives an Invoice object; prints the validated invoice")
 @Produces(MediaType.APPLICATION_JSON)
 class InvoiceResource
 @Inject
@@ -31,11 +34,13 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
      *
      * @param invoice: a valid [Invoice] object
      */
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Prints an invoice", notes = "None", response = Response::class)
     fun printInvoice(@Valid invoice: Invoice,
                      @Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                     "Invoice printed successfully",
                     driver.printInvoice(invoice),
@@ -49,7 +54,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
     @GET
     @Path("/last")
     fun printLast(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                     "Last invoice printed again",
                     driver.printLastInvoice(),

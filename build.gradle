@@ -39,6 +39,8 @@ dependencies {
     compile 'com.fazecast:jSerialComm:1.3.11'
     compile group: 'commons-io', name: 'commons-io', version: '2.4'
     compile 'org.apache.logging.log4j:log4j:2.6.1'
+    compile group: 'io.swagger', name: 'swagger-jersey2-jaxrs', version: '1.5.10'
+    compile 'com.smoketurner:dropwizard-swagger:0.9.3-2'
     //compile 'com.license4j:license4j-runtime-library:RELEASE'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

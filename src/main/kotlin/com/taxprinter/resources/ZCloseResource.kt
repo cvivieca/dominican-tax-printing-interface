@@ -28,7 +28,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
     @GET
     @Path("/")
     fun close(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                 "",
                 driver.zClose(withPrint = false)
@@ -43,7 +43,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
     @GET
     @Path("/print")
     fun closeWithPrint(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                 "",
                 driver.zClose(withPrint = true)

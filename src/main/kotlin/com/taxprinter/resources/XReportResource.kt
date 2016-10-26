@@ -28,7 +28,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver) {
      */
     @GET
     fun close(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                     "",
                     driver.printXReport()

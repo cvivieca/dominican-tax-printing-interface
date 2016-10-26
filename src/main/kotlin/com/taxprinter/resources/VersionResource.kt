@@ -32,7 +32,7 @@ constructor(private val driver: TaxPrinterDriver){
      */
     @GET
     fun version(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                     "",
                     driver.getVersion(),

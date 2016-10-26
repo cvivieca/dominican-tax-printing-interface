@@ -5,15 +5,16 @@ import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
 import com.taxprinter.resources.*
-import com.taxprinter.services.RequestQueueService
 import io.dropwizard.Application
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
+import io.federecio.dropwizard.swagger.SwaggerBundle
 import org.eclipse.jetty.servlets.CrossOriginFilter
 import java.util.*
 import javax.servlet.DispatcherType
 import kotlin.system.exitProcess
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 
 
 /**
@@ -52,8 +53,6 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         filter?.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Origin, Content-Type, Accept")
         filter?.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true")
 
-        // Initialize queue runner
-        RequestQueueService.startRunner()
     }
 
     override fun getName(): String {
@@ -68,7 +67,11 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         .build()
 
         bootstrap?.addBundle(guiceBundle)
-
+        bootstrap?.addBundle(object : SwaggerBundle<TaxprinterConfig>() {
+            override fun getSwaggerBundleConfiguration(configuration: TaxprinterConfig): SwaggerBundleConfiguration {
+                return configuration.swaggerBundleConfiguration!! // TODO: Unsafe call here
+            }
+        })
         bootstrap?.objectMapper?.registerModule(Jdk8Module()) // Support new Optional Jdk8 data type on Jackson POJOs
     }
 

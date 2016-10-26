@@ -2,6 +2,7 @@ package com.taxprinter.configs
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Configuration
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 
 /**
  * Created by george on 03/07/16.
@@ -33,4 +34,10 @@ class TaxprinterConfig() : Configuration() {
      */
     @JsonProperty
     var driver: String? = null
+
+    var swaggerBundleConfiguration: SwaggerBundleConfiguration = { ->
+        val bundle = SwaggerBundleConfiguration()
+        bundle.resourcePackage = "com.taxprinter.resources"
+        bundle
+    }()
 }

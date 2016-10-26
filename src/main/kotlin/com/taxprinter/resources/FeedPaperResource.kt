@@ -28,7 +28,7 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
      */
     @GET
     fun feed(@Suspended asyncResponse: AsyncResponse) {
-        RequestQueueService.queueRequest {
+        RequestQueueService.runRequestAsync {
             Response(
                     "Hardware busy.",
                     null
