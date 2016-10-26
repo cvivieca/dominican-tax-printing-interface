@@ -1,6 +1,7 @@
 package com.taxprinter.models
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.validation.ValidationMethod
 import javax.validation.constraints.Max
@@ -22,6 +23,8 @@ constructor(
         @JsonProperty("discount") @field:Max(100) var discount: Optional<Double>,
         @JsonProperty("charges") @field:Min(100) var charges: Double
         ) {
+
+    @JsonIgnore
     @ValidationMethod(message = "El campo itbis solo acepta uno de los siguientes valores: 18, 13, 11, 8, 5, 0")
     fun isValidItbis(): Boolean {
         return (itbis in arrayOf(18, 13, 11, 8, 5, 0))
