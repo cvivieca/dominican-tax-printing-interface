@@ -69,7 +69,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         bootstrap?.addBundle(guiceBundle)
         bootstrap?.addBundle(object : SwaggerBundle<TaxprinterConfig>() {
             override fun getSwaggerBundleConfiguration(configuration: TaxprinterConfig): SwaggerBundleConfiguration {
-                return configuration.swaggerBundleConfiguration!! // TODO: Unsafe call here
+                return configuration.swaggerBundleConfiguration
             }
         })
         bootstrap?.objectMapper?.registerModule(Jdk8Module()) // Support new Optional Jdk8 data type on Jackson POJOs

@@ -37,7 +37,10 @@ constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Prints an invoice", notes = "None", response = Response::class)
+    @ApiOperation(
+            value = "Prints an invoice",
+            notes = "Accepts camel cased fields and underscore as well (field_name).",
+            response = Response::class)
     fun printInvoice(@Valid invoice: Invoice,
                      @Suspended asyncResponse: AsyncResponse) {
         RequestQueueService.runRequestAsync {
