@@ -6,6 +6,7 @@ import com.taxprinter.driver.bixolonsrp350.utils.Client
 import com.taxprinter.models.*
 import com.taxprinter.models.enums.*
 import org.apache.log4j.Logger
+import org.joda.time.DateTime
 
 /**
  * This class represents the driver for the Bixolon SRP-350 driver
@@ -14,6 +15,12 @@ import org.apache.log4j.Logger
 class Srp350Driver
 @Inject
 constructor(val client: Client) : TaxPrinterDriver {
+    override fun dailyBook(from: DateTime, to: DateTime): String {
+        client.openPort()
+        val history = client.getZHistory(from.toString("ddMMyy"), to.toString("ddMMyy"))
+        client.closePort()
+        return history
+    }
 
     override fun printLastInvoice(): Boolean {
         client.openPort()

@@ -3,7 +3,6 @@ package com.taxprinter.services
 import com.taxprinter.models.Response
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.function.Supplier
 import javax.ws.rs.container.AsyncResponse

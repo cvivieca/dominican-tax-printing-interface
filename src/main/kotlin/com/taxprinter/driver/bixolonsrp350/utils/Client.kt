@@ -17,4 +17,5 @@ interface Client {
     fun getStatusS1(): ByteArray
     fun getStatusS2(): ByteArray
     fun getState(): ByteArray
+    fun getZHistory(start: String, end: String): String
 }

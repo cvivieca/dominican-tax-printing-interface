@@ -1,6 +1,7 @@
 package com.taxprinter.boot
 
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
@@ -43,6 +44,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         environment?.jersey()?.register(ZCloseResource::class.java)
         environment?.jersey()?.register(XReportResource::class.java)
         environment?.jersey()?.register(InvoiceResource::class.java)
+        environment?.jersey()?.register(DailyBookResource::class.java)
         environment?.jersey()?.register(JsonProcessingExceptionMapper(true)) // TODO: Exception on response DISABLE on production
 
         val filter = environment?.servlets()?.addFilter("CORSFilter", CrossOriginFilter::class.java)
@@ -73,6 +75,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
             }
         })
         bootstrap?.objectMapper?.registerModule(Jdk8Module()) // Support new Optional Jdk8 data type on Jackson POJOs
+        bootstrap?.objectMapper?.registerModule(JodaModule()) // Support for Joda time
     }
 
 }

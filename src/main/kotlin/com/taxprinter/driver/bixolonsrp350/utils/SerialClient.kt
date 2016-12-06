@@ -19,9 +19,17 @@ import java.util.concurrent.*
 class SerialClient
 @Inject constructor(@Named("portDescriptor") val portDescriptor: String) : Client {
 
+
     companion object {
         val logger: Logger = Logger.getLogger(SerialClient::class.java)
         val executor: ExecutorService = Executors.newSingleThreadExecutor()
+        fun bytesToHex(`in`: ByteArray): String {
+            val builder = StringBuilder()
+            for (b in `in`) {
+                builder.append(String.format("%02x", b))
+            }
+            return builder.toString()
+        }
     }
 
     private fun safeRead(input: InputStream?,
@@ -38,8 +46,20 @@ class SerialClient
     fun queryCmd(bytePayload: ByteArray): Boolean {
         val frame = prepareFrame(bytePayload)
         val bytesWritten = comPort.writeBytes(frame, frame.size.toLong())
-        logger.info("Wrote ${bytesWritten} bytes.")
+        logger.info("Wrote ${bytesWritten} bytes. Cmd: ${bytePayload.toString(charset("ASCII"))} Hex: ${bytesToHex(frame)}")
         return true
+    }
+
+    override fun getZHistory(start: String, end: String): String {
+        logger.info("Wrote ${comPort.writeBytes(byteArrayOf(0x05), 1)}")
+        logger.info("ACK: ${safeRead(comPort.inputStream, 5, 2).toString(charset("ASCII"))}")
+        queryCmd("U2A$start$end".toByteArray(charset("ASCII")))
+        logger.info("ACK: ${safeRead(comPort.inputStream, 1, 2).toString(charset("ASCII"))}")
+        logger.info("Wrote ${comPort.writeBytes(byteArrayOf(0x06), 1)}")
+        val res = safeRead(comPort.inputStream, 1, 2)
+
+        return "res"
+
     }
 
     override fun printInvoice(invoice: Invoice): Boolean {

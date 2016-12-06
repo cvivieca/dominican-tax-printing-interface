@@ -6,6 +6,7 @@ package com.taxprinter.driver
  * Created by george on 04/07/16.
  */
 import com.taxprinter.models.*
+import org.joda.time.DateTime
 
 interface TaxPrinterDriver {
     fun getPrinterInfo(): PrinterInfo
@@ -16,4 +17,5 @@ interface TaxPrinterDriver {
     fun zClose(withPrint: Boolean): ZClose // Z Close
     fun printInvoice(invoice: Invoice): Boolean // Print an invoice
     fun printLastInvoice(): Boolean // print the last printed invoice
+    fun dailyBook(from: DateTime, to: DateTime): String
 }
