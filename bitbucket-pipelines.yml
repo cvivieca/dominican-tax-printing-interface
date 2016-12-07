@@ -9,7 +9,7 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - apt install -y python-pip python-dev build-essential 
+          - apt install -y python-pip python build-essential 
           - ./gradlew clean
           - ./gradlew uberJar
           - pip install boto3==1.3.0
