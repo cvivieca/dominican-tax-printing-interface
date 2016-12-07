@@ -11,3 +11,5 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - ./gradlew clean
           - ./gradlew uberJar
+          - pip install boto3==1.3.0
+           - python s3_upload.py tax-printer-connector ./build/libs/taxprinter-1.0-SNAPSHOT-all.jar taxprinter-1.0-SNAPSHOT-all
