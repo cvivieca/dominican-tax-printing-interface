@@ -7,7 +7,7 @@ buildscript {
         maven {
             url "http://www.license4j.com/maven/"
         }
-        flatDir dirs: '/usr/share/java' // Proguard path
+        flatDir dirs: "${projectDir}/libs" // Proguard path
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.2"
