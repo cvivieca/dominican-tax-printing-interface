@@ -36,7 +36,6 @@ def upload_to_s3(bucket, artefact, bucket_key):
             Bucket=bucket,
             Key=bucket_key
         )
-        client.
     except ClientError as err:
         print("Failed to upload artefact to S3.\n" + str(err))
         return False
