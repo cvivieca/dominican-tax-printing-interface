@@ -10,8 +10,7 @@ pipelines:
     - step:
         script: # Modify the commands below to build your repository.
           - apt update
-          - apt install -y python-pip python build-essential 
-          - ./gradlew clean
+          - apt install -y python-pip python
           - ./gradlew uberJar
           - pip install boto3==1.3.0
           - python s3_upload.py tax-printer-connector ./build/libs/taxprinter-1.0-SNAPSHOT-all.jar taxprinter-1.0-SNAPSHOT-all.jar
