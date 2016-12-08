@@ -31,10 +31,12 @@ def upload_to_s3(bucket, artefact, bucket_key):
         return False
     try:
         client.put_object(
+        	ACL="public-read",
             Body=open(artefact, 'rb'),
             Bucket=bucket,
             Key=bucket_key
         )
+        client.
     except ClientError as err:
         print("Failed to upload artefact to S3.\n" + str(err))
         return False
