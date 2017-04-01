@@ -9,11 +9,11 @@ import java.util.*
 class License {
     companion object {
         fun check(): Boolean {
-            var dt = "2017-03-01"  // Start date
+            var dt = "2017-04-01"  // Start date
             val sdf = SimpleDateFormat("yyyy-MM-dd")
             val c = Calendar.getInstance()
             c.time = sdf.parse(dt)
-            c.add(Calendar.DATE, 30)  // number of days to add
+            c.add(Calendar.DATE, 60)  // number of days to add
             val nowd = Calendar.getInstance()
             return nowd.time <= c.time
         }
