@@ -9,7 +9,7 @@ import java.util.*
 class License {
     companion object {
         fun check(): Boolean {
-            var dt = "2017-04-01"  // Start date
+            var dt = "2017-05-01"  // Start date
             val sdf = SimpleDateFormat("yyyy-MM-dd")
             val c = Calendar.getInstance()
             c.time = sdf.parse(dt)
