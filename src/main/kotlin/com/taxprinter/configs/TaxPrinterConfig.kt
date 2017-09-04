@@ -35,6 +35,12 @@ class TaxprinterConfig() : Configuration() {
     @JsonProperty
     var driver: String? = null
 
+    /**
+     * Fast food mode enabled
+     */
+    @JsonProperty
+    var isFastFoodMode: Boolean = false
+
     var swaggerBundleConfiguration: SwaggerBundleConfiguration = { ->
         val bundle = SwaggerBundleConfiguration()
         bundle.resourcePackage = "com.taxprinter.resources"

@@ -17,7 +17,8 @@ import java.util.concurrent.*
  * Created by george on 05/07/16.
  */
 class SerialClient
-@Inject constructor(@Named("portDescriptor") val portDescriptor: String) : Client {
+@Inject constructor(@Named("portDescriptor") val portDescriptor: String,
+                    @Named("isFastFoodMode") val isFastFoodMode: Boolean) : Client {
 
 
     companion object {
@@ -76,6 +77,15 @@ class SerialClient
         documentType.put("special_note", 0x35)
         documentType.put("document", 0x36)
         documentType.put("nofiscal", 0x36)
+
+        // If its fast food mode, add law percenteage
+        // TODO: Finish getState and read the current mode from printer instead of manual config
+
+        if (isFastFoodMode) {
+            val lawPAFrame = prepareFrame(byteArrayOf(0x6C))
+            comPort.writeBytes(lawPAFrame, lawPAFrame.size.toLong())
+            logger.debug("Percenteage frame printer response: ${safeRead(comPort.inputStream, 1, 5)}")
+        }
 
         // Write customer info for a document except for document and nonfiscal types
         if (invoice.type !in arrayOf("document", "nofiscal")) {
