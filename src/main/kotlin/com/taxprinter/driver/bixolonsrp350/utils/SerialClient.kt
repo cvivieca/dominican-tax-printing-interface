@@ -9,6 +9,9 @@ import org.apache.log4j.Logger
 import java.io.InputStream
 import java.util.*
 import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.annotation.PostConstruct
+import javax.annotation.PreDestroy
 
 
 /**
@@ -17,20 +20,29 @@ import java.util.concurrent.*
  * Created by george on 05/07/16.
  */
 class SerialClient
-@Inject constructor(@Named("portDescriptor") val portDescriptor: String,
-                    @Named("isFastFoodMode") val isFastFoodMode: Boolean) : Client {
+@Inject constructor(@Named("portDescriptor") private val portDescriptor: String,
+                    @Named("isFastFoodMode") private val isFastFoodMode: Boolean) : Client {
 
+    val comPort = SerialPort.getCommPort(portDescriptor)
 
     companion object {
         val logger: Logger = Logger.getLogger(SerialClient::class.java)
+
         val executor: ExecutorService = Executors.newSingleThreadExecutor()
-        fun bytesToHex(`in`: ByteArray): String {
+
+        fun bytesToHexString(`in`: ByteArray): String {
             val builder = StringBuilder()
             for (b in `in`) {
-                builder.append(String.format("%02x", b))
+                builder.append(String.format("%02x ", b))
             }
+
             return builder.toString()
         }
+    }
+    
+    private fun loggedWrite(frame: ByteArray, size: Long): Int {
+        logger.info("Writing $size bytes to COM port. Frame Hex: ${bytesToHexString(frame)}")
+        return comPort.writeBytes(frame, size)
     }
 
     private fun safeRead(input: InputStream?,
@@ -46,17 +58,28 @@ class SerialClient
 
     fun queryCmd(bytePayload: ByteArray): Boolean {
         val frame = prepareFrame(bytePayload)
-        val bytesWritten = comPort.writeBytes(frame, frame.size.toLong())
-        logger.info("Wrote ${bytesWritten} bytes. Cmd: ${bytePayload.toString(charset("ASCII"))} Hex: ${bytesToHex(frame)}")
+        val bytesWritten = loggedWrite(frame, frame.size.toLong())
+        logger.info("Wrote ${bytesWritten} bytes. Cmd: ${bytePayload.toString(charset("ASCII"))} Hex: ${bytesToHexString(frame)}")
         return true
     }
 
+    private fun checkAndToggleFastFoodMode() {
+        // If its fast food mode, add law percenteage
+        // TODO: Finish getState and read the current mode from printer instead of manual config
+
+        if (isFastFoodMode) {
+            val lawPAFrame = prepareFrame(byteArrayOf(0x6C))
+            loggedWrite(lawPAFrame, lawPAFrame.size.toLong())
+            logger.debug("Percenteage frame printer response: ${safeRead(comPort.inputStream, 1, 5)}")
+        }
+    }
+
     override fun getZHistory(start: String, end: String): String {
-        logger.info("Wrote ${comPort.writeBytes(byteArrayOf(0x05), 1)}")
+        logger.info("Wrote ${loggedWrite(byteArrayOf(0x05), 1)}")
         logger.info("ACK: ${safeRead(comPort.inputStream, 5, 2).toString(charset("ASCII"))}")
         queryCmd("U2A$start$end".toByteArray(charset("ASCII")))
         logger.info("ACK: ${safeRead(comPort.inputStream, 1, 2).toString(charset("ASCII"))}")
-        logger.info("Wrote ${comPort.writeBytes(byteArrayOf(0x06), 1)}")
+        logger.info("Wrote ${loggedWrite(byteArrayOf(0x06), 1)}")
         val res = safeRead(comPort.inputStream, 1, 2)
 
         return "res"
@@ -64,6 +87,8 @@ class SerialClient
     }
 
     override fun printInvoice(invoice: Invoice): Boolean {
+        checkAndToggleFastFoodMode()
+
         val errTable = Hashtable<Byte, String>()
         errTable.put(0x06, "Command executed successfully.")
         errTable.put(0x15, "Error running command.")
@@ -78,14 +103,7 @@ class SerialClient
         documentType.put("document", 0x36)
         documentType.put("nofiscal", 0x36)
 
-        // If its fast food mode, add law percenteage
-        // TODO: Finish getState and read the current mode from printer instead of manual config
 
-        if (isFastFoodMode) {
-            val lawPAFrame = prepareFrame(byteArrayOf(0x6C))
-            comPort.writeBytes(lawPAFrame, lawPAFrame.size.toLong())
-            logger.debug("Percenteage frame printer response: ${safeRead(comPort.inputStream, 1, 5)}")
-        }
 
         // Write customer info for a document except for document and nonfiscal types
         if (invoice.type !in arrayOf("document", "nofiscal")) {
@@ -93,10 +111,10 @@ class SerialClient
             val clientb = invoice.client.orElse("").toByteArray(charset("ASCII"))
             val rncFrame = prepareFrame(byteArrayOf(0x69, 0x52, 0x30) + rncb)
             val clientFrame = prepareFrame(byteArrayOf(0x69, 0x53, 0x30) + clientb)
-            comPort.writeBytes(rncFrame, rncFrame.size.toLong())
+            loggedWrite(rncFrame, rncFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
 
-            comPort.writeBytes(clientFrame, clientFrame.size.toLong())
+            loggedWrite(clientFrame, clientFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
         }
 
@@ -104,7 +122,7 @@ class SerialClient
             // Write ncf if present
             val ncfb = byteArrayOf(0x46) + invoice.ncf.orElse("").padStart(19, '0').toByteArray(charset("ASCII"))
             val ncfFrame = prepareFrame(ncfb)
-            comPort.writeBytes(ncfFrame, ncfFrame.size.toLong())
+            loggedWrite(ncfFrame, ncfFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
         }
 
@@ -112,14 +130,14 @@ class SerialClient
             // write referenceNcf if present
             val rncf = byteArrayOf(0x69, 0x46, 0x30) + invoice.referenceNcf.orElse("").padStart(19, '0').toByteArray(charset("ASCII"))
             val rncFrame = prepareFrame(rncf)
-            comPort.writeBytes(rncFrame, rncFrame.size.toLong())
+            loggedWrite(rncFrame, rncFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
         }
 
         // Write document type
         val dt = byteArrayOf(0x2f, documentType[invoice.type]?: 0x30)
         val dtFrame = prepareFrame(dt)
-        comPort.writeBytes(dtFrame, dtFrame.size.toLong())
+        loggedWrite(dtFrame, dtFrame.size.toLong())
         logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
 
         val taxb = Hashtable<Int, Byte>()
@@ -137,12 +155,12 @@ class SerialClient
             val qtyb = (quantity * 100).toInt().toString().padStart(8, '0').toByteArray(charset("ASCII"))
             val descb = description.toByteArray(charset("ASCII"))
             val itemframe = prepareFrame(taxba + priceb + qtyb + descb)
-            comPort.writeBytes(itemframe, itemframe.size.toLong())
+            loggedWrite(itemframe, itemframe.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             if (discount.isPresent && discount.orElse(0.00) > 0.00) {
                 val itd = byteArrayOf(0x70, 0x2d) + (discount.orElse(0.00) * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
                 val itdFrame = prepareFrame(itd)
-                comPort.writeBytes(itdFrame, itdFrame.size.toLong())
+                loggedWrite(itdFrame, itdFrame.size.toLong())
                 logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             }
         }
@@ -150,7 +168,7 @@ class SerialClient
         // Register discounts
         for ((amount) in invoice.discounts.orElse(emptyArray())) {
             val perc = byteArrayOf(0x70, 0x2a) + (amount * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
-            comPort.writeBytes(perc, perc.size.toLong())
+            loggedWrite(perc, perc.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
         }
 
@@ -169,7 +187,7 @@ class SerialClient
             if (i == invoice.payments.size - 1) { // If last payment
                 val payl = byteArrayOf(0x31) + (pmt[payment.type]?: byteArrayOf(0x31))
                 val paylFrame = prepareFrame(payl)
-                comPort.writeBytes(paylFrame, paylFrame.size.toLong())
+                loggedWrite(paylFrame, paylFrame.size.toLong())
                 logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             } else {
                 val payb = pmt[payment.type] ?: byteArrayOf(0x31)
@@ -177,7 +195,7 @@ class SerialClient
                 val commentb = payment.description.orElse("").toByteArray(charset("ASCII"))
                 val pmntpayload = byteArrayOf(0x32) + payb + amountb + commentb
                 val pmntPayloadFrame = prepareFrame(pmntpayload)
-                comPort.writeBytes(pmntPayloadFrame, pmntPayloadFrame.size.toLong())
+                loggedWrite(pmntPayloadFrame, pmntPayloadFrame.size.toLong())
                 logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             }
         }
@@ -186,12 +204,12 @@ class SerialClient
 
         val closedb = byteArrayOf(0x31, 0x39, 0x39)
         val closedbFrame = prepareFrame(closedb)
-        comPort.writeBytes(closedbFrame, closedbFrame.size.toLong())
+        loggedWrite(closedbFrame, closedbFrame.size.toLong())
         logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
         if (invoice.copy.orElse(false)) {
             Thread.sleep(4000) // TODO: Read printer status on a loop
             val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
-            comPort.writeBytes(copyFrame, copyFrame.size.toLong())
+            loggedWrite(copyFrame, copyFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
         }
         return true
@@ -200,7 +218,7 @@ class SerialClient
 
     override fun printLastInvoice(): Boolean {
         val reprintFrame = prepareFrame(byteArrayOf(0x52, 0x55))
-        comPort.writeBytes(reprintFrame, reprintFrame.size.toLong())
+        loggedWrite(reprintFrame, reprintFrame.size.toLong())
         logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
         return true
     }
@@ -215,12 +233,13 @@ class SerialClient
     }
 
     override fun closeXReport() {
+        checkAndToggleFastFoodMode()
         queryCmd(byteArrayOf(0x49, 0x30, 0x58))
     }
 
     override fun feedPaper() {
         // TODO: Make this work!
-        // comPort.writeBytes(byteArrayOf(0x07, 0x01), 2)
+        // loggedWrite(byteArrayOf(0x07, 0x01), 2)
     }
 
     override fun getStatusS1(): ByteArray {
@@ -238,7 +257,7 @@ class SerialClient
     }
 
     override fun getState(): ByteArray {
-        comPort.writeBytes(byteArrayOf(0x05), 1)
+        loggedWrite(byteArrayOf(0x05), 1)
         // Collect data which arrived at hardware port buffer
         val input: InputStream? = comPort.inputStream
         return safeRead(input, 4, 2)
@@ -246,26 +265,30 @@ class SerialClient
 
     override fun getVersion(): String { return "Serial Client v0.1" }
 
-    val comPort = SerialPort.getCommPort(portDescriptor)
-
+    @PostConstruct
     override fun openPort(): Boolean {
+
         logger.info("Openning port: ${portDescriptor}")
-        comPort.openPort()
+
         comPort.baudRate = 9600
         comPort.numDataBits = 8
         comPort.numStopBits = 1
         comPort.parity = SerialPort.EVEN_PARITY
         comPort.setFlowControl(SerialPort.FLOW_CONTROL_CTS_ENABLED)
-        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 100, 0)
+
+        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 5000, 5000)
+
+        comPort.openPort()
         if (!comPort.isOpen) {
             logger.error("Cannot open port!")
-            return false
         }
         logger.info("Port open!")
         return true
     }
 
+    @PreDestroy
     override fun closePort() {
+        Thread.sleep(1000)
         logger.info("Closing port: ${portDescriptor}")
         comPort.closePort()
         logger.info("Port closed!")

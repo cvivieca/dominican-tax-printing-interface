@@ -2,12 +2,10 @@ package com.taxprinter.boot
 
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.joda.JodaModule
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
 import com.taxprinter.resources.*
-import com.taxprinter.tui.Config
 import io.dropwizard.Application
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper
 import io.dropwizard.setup.Bootstrap
@@ -28,9 +26,7 @@ fun main(args: Array<String>) {
         println("Beta trial expired, ask your provider for a new software build.")
         exitProcess(1)
     }
-    if (args.size > 0 && args[0] == "-config") {
-        Config(DefaultTerminalFactory().createTerminal())
-    }
+
     val extra = arrayOf("server", "taxprinter.yml")
     TaxPrinterApplication().run(*args+extra)
 }
@@ -74,6 +70,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         .addModule(DriverModule())
         .setConfigClass(TaxprinterConfig::class.java)
         .enableAutoConfig(javaClass.`package`.name)
+//        .setInjectorFactory(GovernatorInjectorFactory())
         .build()
 
         bootstrap?.addBundle(guiceBundle)

@@ -1,3 +1,15 @@
-portDescriptor: /dev/ttyUSB0
+portDescriptor: /dev/cu.Repleo-PL2303-00002014
+#portDescriptor: /dev/ttyUSB0
+#portDescriptor: COM3
 driver: bixolonsrp350
-isFastFoodMode: true
+isFastFoodMode: false
+server:
+  applicationConnectors:
+  - type: http
+    port: 8080
+  - type: https
+    port: 8443
+    keyStorePath: ./keystore.jks
+    keyStorePassword: "abc1234."
+    validateCerts: false
+    validatePeers: false
