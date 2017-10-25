@@ -49,7 +49,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         environment?.jersey()?.register(JsonProcessingExceptionMapper(true)) // TODO: Exception on response DISABLE on production
 
         // Avahi service added to dropwizard lifecycle
-        environment?.lifecycle()?.manage(AvahiService())
+//        environment?.lifecycle()?.manage(AvahiService())
 
         val filter = environment?.servlets()?.addFilter("CORSFilter", CrossOriginFilter::class.java)
 
