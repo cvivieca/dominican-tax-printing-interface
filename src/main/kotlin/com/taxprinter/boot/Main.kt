@@ -46,6 +46,7 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         environment?.jersey()?.register(XReportResource::class.java)
         environment?.jersey()?.register(InvoiceResource::class.java)
         environment?.jersey()?.register(DailyBookResource::class.java)
+        environment?.jersey()?.register(LicenseResource::class.java)
         environment?.jersey()?.register(JsonProcessingExceptionMapper(true)) // TODO: Exception on response DISABLE on production
 
         // Avahi service added to dropwizard lifecycle

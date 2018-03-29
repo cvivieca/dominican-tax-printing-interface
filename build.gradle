@@ -10,7 +10,7 @@ buildscript {
         flatDir dirs: "${projectDir}/libs" // Proguard path
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.31"
         classpath ':proguard:'
     }
 }
@@ -31,7 +31,7 @@ repositories {
 compileKotlin.onlyIf { !project.hasProperty('skipKCompile') }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:1.0.2"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.2.31"
     compile 'io.dropwizard:dropwizard-core:0.9.3'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.1'
     compile 'com.google.inject:guice:4.1.0'
@@ -44,6 +44,8 @@ dependencies {
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.8.5'
 //    compile 'com.googlecode.lanterna:lanterna:3.0.0-beta3'
     compile 'com.esotericsoftware.yamlbeans:yamlbeans:1.09'
+    compile 'com.github.oshi:oshi-core:3.4.4'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
 //    compile 'org.jmdns:jmdns:3.5.1'
 //    compile 'com.netflix.governator:governator:1.17.4'
     //compile 'com.license4j:license4j-runtime-library:RELEASE'

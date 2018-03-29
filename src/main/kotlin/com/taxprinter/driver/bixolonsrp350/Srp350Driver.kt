@@ -15,6 +15,12 @@ import org.joda.time.DateTime
 class Srp350Driver
 @Inject
 constructor(val client: Client) : TaxPrinterDriver {
+
+    companion object {
+        val logger = Logger.getLogger(Srp350Driver::class.java)
+    }
+
+
     override fun dailyBook(from: DateTime, to: DateTime): String {
         client.openPort()
         val history = client.getZHistory(from.toString("ddMMyy"), to.toString("ddMMyy"))
@@ -41,10 +47,6 @@ constructor(val client: Client) : TaxPrinterDriver {
         client.closeZReport(withPrint)
         client.closePort()
         return ZClose(12)
-    }
-
-    companion object {
-        val logger = Logger.getLogger(Srp350Driver::class.java)
     }
 
     override fun printXReport() {

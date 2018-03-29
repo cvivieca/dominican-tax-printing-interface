@@ -16,6 +16,7 @@ interface Client {
     fun closeXReport()
     fun getStatusS1(): ByteArray
     fun getStatusS2(): ByteArray
+    fun getStatusS3(): ByteArray
     fun getState(): ByteArray
     fun getZHistory(start: String, end: String): String
 }

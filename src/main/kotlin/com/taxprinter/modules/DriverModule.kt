@@ -48,17 +48,6 @@ class DriverModule(): AbstractModule() {
     }
 
     /**
-     * This function is used by the DI to inject the current printer mode
-     * if it is on fast food mode
-     * TODO: move this to read the mode from the printer
-     */
-    @Provides
-    @Named("isFastFoodMode")
-    fun provideIsFastFoodMode(config: TaxprinterConfig): Boolean {
-        return config.isFastFoodMode
-    }
-
-    /**
      * This function is used by the DI to inject the proper driver
      * on runtime depending on config value
      * @param config : passed by Guice bundle, its the server config

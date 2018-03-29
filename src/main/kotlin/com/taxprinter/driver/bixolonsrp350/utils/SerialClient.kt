@@ -20,10 +20,22 @@ import javax.annotation.PreDestroy
  * Created by george on 05/07/16.
  */
 class SerialClient
-@Inject constructor(@Named("portDescriptor") private val portDescriptor: String,
-                    @Named("isFastFoodMode") private val isFastFoodMode: Boolean) : Client {
+@Inject
+constructor(@Named("portDescriptor") private val portDescriptor: String) : Client {
 
     val comPort = SerialPort.getCommPort(portDescriptor)
+
+    var isFastFood = false
+
+    init {
+        // Check if fastfood
+        openPort()
+        val s3status = getStatusS3()
+        closePort()
+        isFastFood = listOf(s3status[97], s3status[98]).containsAll(listOf<Byte>(0x30, 0x30))
+        logger.info("Is FASTFOOD mode: ${isFastFood}")
+    }
+
 
     companion object {
         val logger: Logger = Logger.getLogger(SerialClient::class.java)
@@ -63,17 +75,6 @@ class SerialClient
         return true
     }
 
-    private fun checkAndToggleFastFoodMode() {
-        // If its fast food mode, add law percenteage
-        // TODO: Finish getState and read the current mode from printer instead of manual config
-
-        if (isFastFoodMode) {
-            val lawPAFrame = prepareFrame(byteArrayOf(0x6C))
-            loggedWrite(lawPAFrame, lawPAFrame.size.toLong())
-            logger.debug("Percenteage frame printer response: ${safeRead(comPort.inputStream, 1, 5)}")
-        }
-    }
-
     override fun getZHistory(start: String, end: String): String {
         logger.info("Wrote ${loggedWrite(byteArrayOf(0x05), 1)}")
         logger.info("ACK: ${safeRead(comPort.inputStream, 5, 2).toString(charset("ASCII"))}")
@@ -87,7 +88,9 @@ class SerialClient
     }
 
     override fun printInvoice(invoice: Invoice): Boolean {
-        checkAndToggleFastFoodMode()
+
+
+
 
         val errTable = Hashtable<Byte, String>()
         errTable.put(0x06, "Command executed successfully.")
@@ -126,7 +129,7 @@ class SerialClient
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
         }
 
-        if (invoice.referenceNcf.isPresent) {
+        if (invoice.type !in arrayOf("document", "nofiscal") && invoice.referenceNcf.isPresent) {
             // write referenceNcf if present
             val rncf = byteArrayOf(0x69, 0x46, 0x30) + invoice.referenceNcf.orElse("").padStart(19, '0').toByteArray(charset("ASCII"))
             val rncFrame = prepareFrame(rncf)
@@ -148,69 +151,143 @@ class SerialClient
         taxb.put(11, 0x24)
         taxb.put(13, 0x25)
 
-        // Register items
-        for ((description, extraDescription, quantity, price, itbis, discount) in invoice.items) {
-            val taxba = byteArrayOf(taxb[itbis]?: 0x20)
-            val priceb = (price * 100).toInt().toString().padStart(10, '0').toByteArray(charset("ASCII"))
-            val qtyb = (quantity * 100).toInt().toString().padStart(8, '0').toByteArray(charset("ASCII"))
-            val descb = description.toByteArray(charset("ASCII"))
-            val itemframe = prepareFrame(taxba + priceb + qtyb + descb)
-            loggedWrite(itemframe, itemframe.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
-            if (discount.isPresent && discount.orElse(0.00) > 0.00) {
-                val itd = byteArrayOf(0x70, 0x2d) + (discount.orElse(0.00) * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
-                val itdFrame = prepareFrame(itd)
-                loggedWrite(itdFrame, itdFrame.size.toLong())
+        if (invoice.type !in arrayOf("document", "nofiscal")) {
+
+
+            // Register items
+            for ((description, extraDescription, quantity, price, itbis, discount) in invoice.items) {
+                val taxba = byteArrayOf(taxb[itbis] ?: 0x20)
+                val priceb = (price * 100).toInt().toString().padStart(10, '0').toByteArray(charset("ASCII"))
+                val qtyb = (quantity * 100).toInt().toString().padStart(8, '0').toByteArray(charset("ASCII"))
+                val descb = description.toByteArray(charset("ASCII"))
+                val itemframe = prepareFrame(taxba + priceb + qtyb + descb)
+                loggedWrite(itemframe, itemframe.size.toLong())
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                if (discount.isPresent && discount.orElse(0.00) > 0.00) {
+                    val itd = byteArrayOf(0x70, 0x2d) + (discount.orElse(0.00) * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
+                    val itdFrame = prepareFrame(itd)
+                    loggedWrite(itdFrame, itdFrame.size.toLong())
+                    logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                }
+            }
+
+            // Register discounts
+            for ((amount) in invoice.discounts.orElse(emptyArray())) {
+                val perc = byteArrayOf(0x70, 0x2a) + (amount * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
+                loggedWrite(perc, perc.size.toLong())
                 logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             }
-        }
 
-        // Register discounts
-        for ((amount) in invoice.discounts.orElse(emptyArray())) {
-            val perc = byteArrayOf(0x70, 0x2a) + (amount * 100).toInt().toString().padStart(4, '0').toByteArray(charset("ASCII"))
-            loggedWrite(perc, perc.size.toLong())
-            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
-        }
 
-        val pmt = Hashtable<String, ByteArray>()
-        pmt.put("cash", byteArrayOf(0x30, 0x31))
-        pmt.put("check", byteArrayOf(0x30, 0x32))
-        pmt.put("credit_card", byteArrayOf(0x30, 0x33))
-        pmt.put("debit_card", byteArrayOf(0x30, 0x34))
-        pmt.put("credit_note", byteArrayOf(0x30, 0x35))
-        pmt.put("coupon", byteArrayOf(0x30, 0x36))
-        pmt.put("card", byteArrayOf(0x30, 0x38))
-        pmt.put("other", byteArrayOf(0x30, 0x39))
+            if (isFastFood) {
 
-        // Payments register
-        invoice.payments.forEachIndexed { i, payment ->
-            if (i == invoice.payments.size - 1) { // If last payment
-                val payl = byteArrayOf(0x31) + (pmt[payment.type]?: byteArrayOf(0x31))
-                val paylFrame = prepareFrame(payl)
-                loggedWrite(paylFrame, paylFrame.size.toLong())
-                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
-            } else {
-                val payb = pmt[payment.type] ?: byteArrayOf(0x31)
-                val amountb = (payment.amount * 100).toInt().toString().padStart(12, '0').toByteArray(charset("ASCII"))
-                val commentb = payment.description.orElse("").toByteArray(charset("ASCII"))
-                val pmntpayload = byteArrayOf(0x32) + payb + amountb + commentb
-                val pmntPayloadFrame = prepareFrame(pmntpayload)
-                loggedWrite(pmntPayloadFrame, pmntPayloadFrame.size.toLong())
+                val lawPAFrame = prepareFrame(byteArrayOf(0x6C, 0x31))
+                loggedWrite(lawPAFrame, lawPAFrame.size.toLong())
                 logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
             }
-        }
 
-        // TODO: Messages or comment
+            val pmt = Hashtable<String, ByteArray>()
+            pmt.put("cash", byteArrayOf(0x30, 0x31))
+            pmt.put("check", byteArrayOf(0x30, 0x32))
+            pmt.put("credit_card", byteArrayOf(0x30, 0x33))
+            pmt.put("debit_card", byteArrayOf(0x30, 0x34))
+            pmt.put("credit_note", byteArrayOf(0x30, 0x35))
+            pmt.put("coupon", byteArrayOf(0x30, 0x36))
+            pmt.put("card", byteArrayOf(0x30, 0x38))
+            pmt.put("other", byteArrayOf(0x30, 0x39))
 
-        val closedb = byteArrayOf(0x31, 0x39, 0x39)
-        val closedbFrame = prepareFrame(closedb)
-        loggedWrite(closedbFrame, closedbFrame.size.toLong())
-        logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
-        if (invoice.copy.orElse(false)) {
-            Thread.sleep(4000) // TODO: Read printer status on a loop
-            val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
-            loggedWrite(copyFrame, copyFrame.size.toLong())
+            // Payments register
+            invoice.payments.forEachIndexed { i, payment ->
+                if (i == invoice.payments.size - 1) { // If last payment
+                    val payl = byteArrayOf(0x31) + (pmt[payment.type] ?: byteArrayOf(0x31))
+                    val paylFrame = prepareFrame(payl)
+                    loggedWrite(paylFrame, paylFrame.size.toLong())
+                    logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                } else {
+                    val payb = pmt[payment.type] ?: byteArrayOf(0x31)
+                    val amountb = (payment.amount * 100).toInt().toString().padStart(12, '0').toByteArray(charset("ASCII"))
+                    val commentb = payment.description.orElse("").toByteArray(charset("ASCII"))
+                    val pmntpayload = byteArrayOf(0x32) + payb + amountb + commentb
+                    val pmntPayloadFrame = prepareFrame(pmntpayload)
+                    loggedWrite(pmntPayloadFrame, pmntPayloadFrame.size.toLong())
+                    logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 5)}")
+                }
+            }
+
+            // Close fiscal doc
+            val closedb = byteArrayOf(0x31, 0x39, 0x39)
+            val closedbFrame = prepareFrame(closedb)
+            loggedWrite(closedbFrame, closedbFrame.size.toLong())
             logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+            if (invoice.copy.orElse(false)) {
+                Thread.sleep(4000) // TODO: Read printer status on a loop
+                val copyFrame = prepareFrame(byteArrayOf(0x52, 0x55))
+                loggedWrite(copyFrame, copyFrame.size.toLong())
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 20)}")
+            }
+
+        } else {
+
+            val boldText = { text: String -> byteArrayOf(0x38, 0x30, 0x2a) + text.toByteArray(charset("ASCII")) }
+
+            val normalText = { text: String -> byteArrayOf(0x38, 0x30, 0x2d) + text.toByteArray(charset("ASCII")) }
+
+            val descriptionLabel = prepareFrame(boldText("DESCRIPCION" + ("VALOR".padStart(45, ' '))))
+            loggedWrite(descriptionLabel, descriptionLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            for ((description, extraDescription, quantity, price, itbis, discount) in invoice.items) {
+
+                val firstrowTxt = normalText(String.format("%.2f", quantity) + " x " + String.format("%.2f", price))
+                val firstRowLbl = prepareFrame(firstrowTxt)
+                loggedWrite(firstRowLbl, firstRowLbl.size.toLong())
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 1)}")
+
+                val secRow = normalText(description + (String.format("%.2f", quantity * price).padStart(56 - description.length, ' ')))
+                val secRowLbl = prepareFrame(secRow)
+                loggedWrite(secRowLbl, secRowLbl.size.toLong())
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 1)}")
+
+
+            }
+            val lineLabel = prepareFrame(normalText("-".padStart(56, '-')))
+            loggedWrite(lineLabel, lineLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            val subtotal: Double = invoice.items.map { it.price * it.quantity}.sum()
+
+            val subtotalLabel = prepareFrame(normalText("SUBTOTAL" + (String.format("%.2f", subtotal).padStart(56 - "SUBTOTAL".length, ' '))))
+            loggedWrite(subtotalLabel, subtotalLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            val totalItbis: Double = invoice.items.map { (it.itbis / 100.00) * (it.price * it.quantity) }.sum()
+
+            val itbisLabel = prepareFrame(normalText("TOTAL ITBIS" + (String.format("%.2f", totalItbis).padStart(56 - "TOTAL ITBIS".length, ' '))))
+            loggedWrite(itbisLabel, itbisLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            var lawPercent = 0.00
+            if (isFastFood) {
+                lawPercent = invoice.items.map { it.price * it.quantity }.sum() * 0.10;
+
+                val lawPercentTxt = prepareFrame(normalText("% LEY" + (String.format("%.2f", lawPercent).padStart(56 - "% LEY".length, ' '))))
+                loggedWrite(lawPercentTxt, lawPercentTxt.size.toLong())
+                logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+
+            }
+
+            loggedWrite(lineLabel, lineLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            val totalLabel = prepareFrame(boldText("TOTAL" + (String.format("%.2f", subtotal + totalItbis + lawPercent).padStart(56 - "TOTAL".length, ' '))))
+            loggedWrite(totalLabel, totalLabel.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
+
+            val closeNoFiscal = byteArrayOf(0x38, 0x31)
+            val closeNoFiscalFrame = prepareFrame(closeNoFiscal)
+            loggedWrite(closeNoFiscalFrame, closeNoFiscalFrame.size.toLong())
+            logger.debug("ACK: ${safeRead(comPort.inputStream, 1, 10)}")
         }
         return true
 
@@ -233,7 +310,7 @@ class SerialClient
     }
 
     override fun closeXReport() {
-        checkAndToggleFastFoodMode()
+//        checkAndToggleFastFoodMode()
         queryCmd(byteArrayOf(0x49, 0x30, 0x58))
     }
 
@@ -254,6 +331,13 @@ class SerialClient
         queryCmd(byteArrayOf(0x53, 0x32))
         val input = comPort.inputStream
         return safeRead(input, 79, 3)
+    }
+
+    override fun getStatusS3(): ByteArray {
+        val prepareFrame = prepareFrame(byteArrayOf(0x53, 0x33))
+        loggedWrite(prepareFrame, prepareFrame.size.toLong())
+        val input = comPort.inputStream
+        return safeRead(input, 160, 4)
     }
 
     override fun getState(): ByteArray {
