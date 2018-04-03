@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class StateResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver) {
+constructor(private val driver: TaxPrinterDriver) {
     /**
      * Returns tax-printer information
      * @return Tax Printer information

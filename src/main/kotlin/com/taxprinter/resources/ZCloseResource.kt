@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class ZCloseResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
+constructor(private val driver: TaxPrinterDriver){
     /**
      * Do a fiscal end by doing a Z close
      * @return ZClose

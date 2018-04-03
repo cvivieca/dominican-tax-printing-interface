@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class PrinterInformationResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver) {
+constructor(private val driver: TaxPrinterDriver) {
     /**
      * Returns printer hardware info
      * @return Printer Hardware Info

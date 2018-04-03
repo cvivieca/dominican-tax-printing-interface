@@ -151,6 +151,7 @@ constructor(@Named("portDescriptor") private val portDescriptor: String) : Clien
         taxb.put(11, 0x24)
         taxb.put(13, 0x25)
 
+        // Document is a fiscal one
         if (invoice.type !in arrayOf("document", "nofiscal")) {
 
 
@@ -334,6 +335,7 @@ constructor(@Named("portDescriptor") private val portDescriptor: String) : Clien
     }
 
     override fun getStatusS3(): ByteArray {
+        getState()
         val prepareFrame = prepareFrame(byteArrayOf(0x53, 0x33))
         loggedWrite(prepareFrame, prepareFrame.size.toLong())
         val input = comPort.inputStream

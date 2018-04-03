@@ -21,7 +21,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class FeedPaperResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
+constructor(private val driver: TaxPrinterDriver){
     /**
      * Feed paper
      * @return FeedPaper

@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class InvoiceResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
+constructor(private val driver: TaxPrinterDriver){
     /**
      * Receives an Invoice object over POST; prints an invoice once validated.
      *

@@ -22,7 +22,7 @@ import javax.ws.rs.core.StreamingOutput
 @Path("/daily_book")
 class DailyBookResource
 @Inject
-constructor(@Named("printerDriver") private val driver: TaxPrinterDriver){
+constructor(private val driver: TaxPrinterDriver){
 
     val format: DateTimeFormatter = DateTimeFormat.forPattern("ddMMyy")
 

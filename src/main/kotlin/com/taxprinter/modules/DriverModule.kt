@@ -3,6 +3,7 @@ package com.taxprinter.modules
 import com.google.inject.AbstractModule
 import com.google.inject.Provider
 import com.google.inject.Provides
+import com.google.inject.Singleton
 import com.google.inject.name.Named
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.driver.TaxPrinterDriver
@@ -21,8 +22,7 @@ class DriverModule(): AbstractModule() {
     companion object {
         val logger: Logger = Logger.getLogger(DriverModule::class.java)
     }
-    // Reusable provider for runtime dependency injection
-    var clientProvider: Provider<Client>? = null
+
 
     override fun configure() {
         /**
@@ -31,7 +31,6 @@ class DriverModule(): AbstractModule() {
          */
         //bind(TaxPrinterDriver::class.java).to(Srp350Driver::class.java)
         bind(Client::class.java).to(SerialClient::class.java)
-        clientProvider = this.getProvider(Client::class.java)
 
     }
 
@@ -54,8 +53,9 @@ class DriverModule(): AbstractModule() {
      * @return [TaxPrinterDriver] a proper driver object implementation
      */
     @Provides
-    fun provideDriver(config: TaxprinterConfig): TaxPrinterDriver {
-        val client = clientProvider!!.get() // Unsafe call over null
+    @Singleton
+    fun provideDriver(client: Client, config: TaxprinterConfig): TaxPrinterDriver {
+
         when (config.driver) {
             "bixolonsrp350" -> return Srp350Driver(client)
             else -> {

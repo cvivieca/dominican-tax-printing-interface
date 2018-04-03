@@ -2,7 +2,6 @@ package com.taxprinter.boot
 
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.joda.JodaModule
-import com.hubspot.dropwizard.guice.GuiceBundle
 import com.taxprinter.configs.TaxprinterConfig
 import com.taxprinter.modules.DriverModule
 import com.taxprinter.resources.*
@@ -16,6 +15,7 @@ import java.util.*
 import javax.servlet.DispatcherType
 import kotlin.system.exitProcess
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
+import ru.vyarus.dropwizard.guice.GuiceBundle
 
 
 /**
@@ -38,15 +38,15 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
         // as these resources has injected dependencies we register
         // them using java class references (which are not the same
         // than kotlin class references
-        environment?.jersey()?.register(VersionResource::class.java)
-        environment?.jersey()?.register(StateResource::class.java)
-        environment?.jersey()?.register(PrinterInformationResource::class.java)
-        environment?.jersey()?.register(FeedPaperResource::class.java)
-        environment?.jersey()?.register(ZCloseResource::class.java)
-        environment?.jersey()?.register(XReportResource::class.java)
-        environment?.jersey()?.register(InvoiceResource::class.java)
-        environment?.jersey()?.register(DailyBookResource::class.java)
-        environment?.jersey()?.register(LicenseResource::class.java)
+//        environment?.jersey()?.register(VersionResource::class.java)
+//        environment?.jersey()?.register(StateResource::class.java)
+//        environment?.jersey()?.register(PrinterInformationResource::class.java)
+//        environment?.jersey()?.register(FeedPaperResource::class.java)
+//        environment?.jersey()?.register(ZCloseResource::class.java)
+//        environment?.jersey()?.register(XReportResource::class.java)
+//        environment?.jersey()?.register(InvoiceResource::class.java)
+//        environment?.jersey()?.register(DailyBookResource::class.java)
+//        environment?.jersey()?.register(LicenseResource::class.java)
         environment?.jersey()?.register(JsonProcessingExceptionMapper(true)) // TODO: Exception on response DISABLE on production
 
         // Avahi service added to dropwizard lifecycle
@@ -67,12 +67,10 @@ class TaxPrinterApplication() : Application<TaxprinterConfig>() {
     }
 
     override fun initialize(bootstrap: Bootstrap<TaxprinterConfig>?) {
-        val guiceBundle = GuiceBundle.newBuilder<TaxprinterConfig>()
-        .addModule(DriverModule())
-        .setConfigClass(TaxprinterConfig::class.java)
-        .enableAutoConfig(javaClass.`package`.name)
-//        .setInjectorFactory(GovernatorInjectorFactory())
-        .build()
+        val guiceBundle = GuiceBundle.builder<TaxprinterConfig>()
+                .enableAutoConfig("com.taxprinter.resources")
+                .modules(DriverModule())
+                .build()
 
         bootstrap?.addBundle(guiceBundle)
         bootstrap?.addBundle(object : SwaggerBundle<TaxprinterConfig>() {
