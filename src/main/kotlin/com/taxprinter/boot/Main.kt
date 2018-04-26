@@ -22,8 +22,10 @@ import ru.vyarus.dropwizard.guice.GuiceBundle
  * Created by george on 03/07/16.
  */
 fun main(args: Array<String>) {
+    println("Device ID: ${ License.uniqueId().deviceIdentifier }")
+
     if (!License.check()) {
-        println("Beta trial expired, ask your provider for a new software build.")
+        println("Invalid license, please ask your provider for a new one.")
         exitProcess(1)
     }
 
