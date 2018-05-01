@@ -21,7 +21,7 @@ constructor   (
         @JsonProperty("copy") var copy: Optional<Boolean>,
         @JsonProperty("cashier") var cashier: Optional<Int>,
         @JsonProperty("subsidiary") var subsidiary: Int,
-        @JsonProperty("ncf") @Size(min = 19, max = 19) var ncf: Optional<String>,
+        @JsonProperty("ncf") @Size(min = 11, max = 11) var ncf: Optional<String>,
         @JsonProperty("reference_ncf") var referenceNcf: Optional<String>,
         @JsonProperty("client") var client: Optional<String>,
         @JsonProperty("rnc") var rnc: Optional<String>,
