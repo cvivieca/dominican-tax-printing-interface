@@ -30,3 +30,11 @@ and Linux are supported (may require assign port access permissions to your curr
 * Java 8+ is required
 * Run ./gradlew uberJar
 * Find the executable fat jar on the build folder
+
+## Notice
+
+This interface is not an official nor endorsed Government Tax Collection Agency (DGII) product.
+I wouldn't be in any way liable or responsible to any Obligor who is a Party or is a party to a Finance Document
+to which this clause applies for any loss or liability arising from any act, default, omission or misconduct
+due to the usage of this source code. Ask your local DGII representative for license or permissions to interface
+with a government issued printer device.
