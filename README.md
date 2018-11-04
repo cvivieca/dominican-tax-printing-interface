@@ -1,5 +1,7 @@
 # Tax Printer Connector
 
+[![Build Status](https://travis-ci.org/georgerb/dominican-tax-printing-interface.svg?branch=master)](https://travis-ci.org/georgerb/dominican-tax-printing-interface)
+
 ## Motivation
 
 A tax printing device is a government issued device to collect businesses billing and tax information. I developed this as an easy way to interact with those printers from any http client (even CURL or your own browser) so you can easily print invoices from your web or desktop application.
