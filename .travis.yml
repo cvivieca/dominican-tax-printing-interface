@@ -11,6 +11,7 @@ script:
 deploy:
   provider: releases
   api_key: $GITHUB_OAUTH_TOKEN
+  file: "./build/libs/taxprinter-1.0-SNAPSHOT-all.jar"
   skip_cleanup: true
   on:
     tags: true
