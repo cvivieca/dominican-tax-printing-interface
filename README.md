@@ -19,6 +19,10 @@ SpringBoot, I think it can be easily done, I tried to use JEE APIs as much as I 
 
 * Epsonxxx <- WIP and will be supported in a future release (I don't have a date for that).
 
+## Bundled Jar
+
+Download a fresh copy [HERE](https://github.com/georgerb/dominican-tax-printing-interface/releases)
+
 ## Configuration
 
 Check the taxprinter.yml config, change the port number to match the port used by your device, Windows, Mac OS,
