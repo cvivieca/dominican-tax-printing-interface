@@ -22,12 +22,6 @@ import ru.vyarus.dropwizard.guice.GuiceBundle
  * Created by george on 03/07/16.
  */
 fun main(args: Array<String>) {
-    println("Device ID: ${ License.uniqueId().deviceIdentifier }")
-
-    if (!License.check()) {
-        println("Invalid license, please ask your provider for a new one.")
-        exitProcess(1)
-    }
 
     val extra = arrayOf("server", "taxprinter.yml")
     TaxPrinterApplication().run(*args+extra)

@@ -1,30 +1,32 @@
 # Tax Printer Connector
 
-## How to generate a License file
+## Motivation
 
-1 - Create a json license request file, an example is provided in the source directory:
+Our government sucks so much in collecting taxes that they need to gather businesses billing info right from
+last century old printing devices. I developed this as an easy way to interact with those arcane printers from
+any http client (even CURL or your own browser). So you can easily print invoices from your web or desktop
+application.
 
-```json
-{
-    "deviceIdentifier": "5979e0a741313127bd669856d24513d8d7503507800c5f69473e677f143b64e7",
-    "emissionDate": "2018-02-01",
-    "validForDays": 90
-}
-```
+## Extending
 
-Where deviceIdentifier is the unique hardware identifier shown on the first log when you boot the driver
-emissionDate is the day which the license starts counting
-validForDays is the number of days that the license will be valid from the emissionDate
+Create a new package under com.taxprinter.driver and implement the TaxPrinterDriver interface, then change the
+loaded implementation on the main Guice module for dependency injection, that's it. I used dropwizard because
+that was the only sane http micro framework I knew back then when I started this, feel free to port this to
+SpringBoot, I think it can be easily done, I tried to use JEE APIs as much as I could.
 
-2 - Generate a binary license file encrypted from the driver public key:
+## Supported devices
 
-```bash
-cat license-request.json | openssl rsautl -encrypt -pubin -inkey public.pem > license.bin
-```
+* BixolonSRP350
 
-3 - Store the license.bin binary file in the root folder where the driver jar resides
+* Epsonxxx <- WIP and will be supported in a future release (I don't have a date for that).
 
-Done.
+## Configuration
 
-Notes: The driver will refuse to boot if an invalid license is provided. In the future invalid attempts will be sent
-to a telemetry server to monitor misuse and tampering.
+Check the taxprinter.yml config, change the port number to match the port used by your device, Windows, Mac OS,
+and Linux are supported (may require assign port access permissions to your current user).
+
+## Build
+
+* Java 8+ is required
+* Run ./gradlew uberJar
+* Find the executable fat jar on the build folder
