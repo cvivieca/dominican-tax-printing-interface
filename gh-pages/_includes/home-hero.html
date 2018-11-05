@@ -1,0 +1,53 @@
+<div class="container">
+  
+  <div class="row vert-offset-top-6">
+
+    <div class="col-md-4 ">
+        
+        <img class="text-center" width="300px" height="300px" src="../img/beautiful50s.png" />
+        
+
+    </div>
+    <div class="col-md-8">
+      
+
+     
+
+
+          {% if site.title != '' %}
+          <h1 class="text-left">{{site.title}}</h1>
+          {% endif %}
+
+          {% if site.description != '' or site.enable_contact == true %}
+          <p class="text-left">
+            {% if site.description != '' %}
+            {{site.description}}
+            {% endif %}
+
+            {% if site.enable_contact == true %}
+            {% include contact.html %}
+            {% include contact-modal.html %}
+            {% endif %}
+          </p>
+          {% endif %}
+
+          <div class="hero-buttons">
+
+           
+            {% if site.github_username != '' %}
+              <a href="https://github.com/georgerb/dominican-tax-printing-interface"><button class="btn btn-default btn-lg"><i class="fa fa-github fa-lg"></i>Github</button></a>
+              <a href="https://github.com/georgerb/dominican-tax-printing-interface/releases"><button class="btn btn-default btn-lg"><i class="fa fa-download fa-lg"></i>Download</button></a>
+              <a href="https://github.com/georgerb/dominican-tax-printing-interface/README.md"><button class="btn btn-default btn-lg"><i class="fa fa-book fa-lg"></i>Readme</button></a>
+
+            {% endif %}
+
+          </div>
+
+
+      
+
+    </div>
+
+  </div>
+
+</div>
