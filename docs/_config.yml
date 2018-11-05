@@ -15,8 +15,8 @@
 # in the templates via {{ site.myvariable }}.
 title: "Tax Printer HTTP Interface"
 description: "A tax printing device is a government issued device to collect businesses billing and tax information. I developed this as an easy way to interact with those printers from any http client (even CURL or your own browser) so you can easily print invoices from your web or desktop application."
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "http://jamigibbs.github.io/phantom" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/dominican-tax-printing-interface" # the subpath of your site, e.g. /blog
+url: "https://georgerb.github.io/dominican-tax-printing-interface/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: 'jamigibbs'
 github_username: 'jamigibbs'
 medium_username: 'blog.jamigibbs.com'
